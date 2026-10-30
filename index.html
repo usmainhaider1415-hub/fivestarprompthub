@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt Hub Pro — AI Prompt Collection</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Firebase SDKs (Compat version for single-file web deployment) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-blue: #B9E8FF;
+      --bg-pink: #FFD5EB;
+      --bg-lavender: #DCCBFF;
+      --bg-mint: #D2FFE9;
+      --text-main: #20243A;
+      --text-muted: #60677A;
+    }
+
+    * {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Ambient Dreamy Jelly Pastel Background */
+    body {
+      background: radial-gradient(circle at 10% 20%, #B9E8FF 0%, rgba(185, 232, 255, 0.45) 35%, transparent 60%),
+                  radial-gradient(circle at 90% 15%, #FFD5EB 0%, rgba(255, 213, 235, 0.5) 40%, transparent 65%),
+                  radial-gradient(circle at 50% 60%, #DCCBFF 0%, rgba(220, 203, 255, 0.45) 35%, transparent 70%),
+                  radial-gradient(circle at 20% 90%, #D2FFE9 0%, rgba(210, 255, 233, 0.5) 40%, transparent 65%),
+                  linear-gradient(135deg, #f0f7ff 0%, #fff0f7 50%, #f6f0ff 100%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
+
+    /* Liquid 3D Jelly Glassmorphism Cards */
+    .jelly-card {
+      background: rgba(255, 255, 255, 0.62);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1.5px solid rgba(255, 255, 255, 0.88);
+      box-shadow: 
+        0 14px 38px rgba(135, 145, 180, 0.12),
+        0 4px 12px rgba(160, 175, 210, 0.08),
+        inset 0 1px 2px rgba(255, 255, 255, 0.95),
+        inset 0 -2px 4px rgba(210, 220, 240, 0.25);
+      border-radius: 36px;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .jelly-card-subtle {
+      background: rgba(255, 255, 255, 0.50);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1.2px solid rgba(255, 255, 255, 0.85);
+      box-shadow: 
+        0 8px 24px rgba(140, 150, 180, 0.08),
+        inset 0 1px 2px rgba(255, 255, 255, 0.95);
+      border-radius: 28px;
+    }
+
+    .jelly-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 
+        0 20px 48px rgba(135, 145, 190, 0.18),
+        0 6px 16px rgba(160, 175, 210, 0.12),
+        inset 0 1px 3px rgba(255, 255, 255, 1);
+    }
+
+    /* Jelly Buttons */
+    .jelly-btn-primary {
+      background: linear-gradient(135deg, #4F86F7 0%, #7655F6 100%);
+      color: white;
+      box-shadow: 0 8px 20px rgba(100, 110, 245, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .jelly-btn-primary:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 12px 26px rgba(100, 110, 245, 0.45);
+    }
+
+    .jelly-btn-secondary {
+      background: linear-gradient(135deg, #FF7DB4 0%, #C467FF 100%);
+      color: white;
+      box-shadow: 0 8px 20px rgba(230, 115, 190, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .jelly-btn-secondary:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 12px 26px rgba(230, 115, 190, 0.45);
+    }
+
+    .jelly-btn-glass {
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      color: var(--text-main);
+      box-shadow: 0 4px 14px rgba(130, 145, 180, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.9);
+      transition: all 0.2s ease;
+    }
+    .jelly-btn-glass:hover {
+      background: rgba(255, 255, 255, 0.95);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(130, 145, 180, 0.18);
+    }
+
+    .droplet-glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(44px);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(160, 175, 210, 0.4);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(140, 155, 200, 0.7);
+    }
+
+    /* Floating animation */
+    @keyframes float-gentle {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-7px) rotate(1.5deg); }
+    }
+    .animate-float {
+      animation: float-gentle 6s ease-in-out infinite;
+    }
+
+    /* Modal Animation */
+    .modal-enter {
+      animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.95) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen relative pb-16">
+
+  <!-- Ambient Glow Orbs -->
+  <div class="droplet-glow w-96 h-96 bg-[#B9E8FF] top-8 left-6 opacity-70"></div>
+  <div class="droplet-glow w-96 h-96 bg-[#FFD5EB] top-16 right-8 opacity-60"></div>
+  <div class="droplet-glow w-[520px] h-[520px] bg-[#DCCBFF] top-[550px] left-1/3 opacity-45"></div>
+  <div class="droplet-glow w-80 h-80 bg-[#D2FFE9] top-[1100px] right-16 opacity-60"></div>
+
+  <!-- Decorative Jelly Floating Emblems -->
+  <div class="fixed top-24 left-6 text-2xl select-none pointer-events-none opacity-60 animate-float">✨</div>
+  <div class="fixed top-1/3 right-10 text-xl select-none pointer-events-none opacity-50 animate-float" style="animation-delay: -2s;">🌸</div>
+  <div class="fixed bottom-24 left-10 text-2xl select-none pointer-events-none opacity-60 animate-float" style="animation-delay: -4s;">🫧</div>
+
+  <!-- ================= TOP FLOATING NAVIGATION BAR ================= -->
+  <header class="sticky top-4 z-40 px-3 sm:px-4 max-w-7xl mx-auto">
+    <nav class="jelly-card px-4 sm:px-6 py-3.5 flex items-center justify-between shadow-lg">
+      
+      <!-- Logo & Brand Name -->
+      <a href="#hero" class="flex items-center gap-2.5 sm:gap-3 group">
+        <div class="w-10 sm:w-11 h-10 sm:h-11 rounded-2xl bg-gradient-to-tr from-[#7F56D9] via-[#9E77ED] to-[#00C49F] p-[2px] shadow-md flex items-center justify-center transition-transform group-hover:scale-105">
+          <div class="w-full h-full bg-white/80 rounded-[14px] flex items-center justify-center backdrop-blur-sm">
+            <i data-lucide="sparkles" class="w-5 sm:w-6 h-5 sm:h-6 text-[#7F56D9]"></i>
+          </div>
+        </div>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <span class="font-extrabold text-base sm:text-xl tracking-tight text-[#20243A]">Prompt Hub Pro</span>
+            <span class="hidden sm:inline-block text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#B9E8FF]/60 text-[#1E5F8A] border border-[#B9E8FF]">PRO v2.4</span>
+          </div>
+          <span class="text-[11px] sm:text-xs text-[#60677A] font-medium hidden sm:block">AI Prompt Collection & Creative Engine</span>
+        </div>
+      </a>
+
+      <!-- Desktop Links -->
+      <div class="hidden lg:flex items-center gap-1 bg-white/40 p-1.5 rounded-full border border-white/60 shadow-inner">
+        <a href="#hero" class="px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-[#20243A] hover:bg-white/80 transition-all">Home</a>
+        <a href="#prompts-section" onclick="filterByCategory('all')" class="px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-[#60677A] hover:text-[#20243A] hover:bg-white/80 transition-all">All Prompts</a>
+        <a href="#prompts-section" onclick="filterByCategory('short-video')" class="px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-[#60677A] hover:text-[#20243A] hover:bg-white/80 transition-all">Short Video</a>
+        <a href="#prompts-section" onclick="filterByCategory('long-video')" class="px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-[#60677A] hover:text-[#20243A] hover:bg-white/80 transition-all">Long Video</a>
+        <a href="#prompts-section" onclick="filterByCategory('image')" class="px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-[#60677A] hover:text-[#20243A] hover:bg-white/80 transition-all">Image Prompts</a>
+        <a href="#community-section" class="px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-[#60677A] hover:text-[#20243A] hover:bg-white/80 transition-all">Community</a>
+        <a href="#about-section" class="px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-[#60677A] hover:text-[#20243A] hover:bg-white/80 transition-all">About</a>
+      </div>
+
+      <!-- Action Area: Live Time + Audio + Firebase Status -->
+      <div class="flex items-center gap-2">
+        <!-- Firebase Status Pill -->
+        <div id="firebase-status-pill" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-white/60 border border-white/80 text-[11px] sm:text-xs font-bold text-slate-700 shadow-sm" title="Connected to Project: pormotes">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping" id="firebase-dot"></span>
+          <span id="firebase-status-text" class="hidden xs:inline">Firebase Connecting...</span>
+        </div>
+
+        <!-- Live Clock Pill -->
+        <div class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 border border-white/80 text-xs font-bold text-[#3B4252] shadow-sm">
+          <span id="nav-live-clock">12:00 PM</span>
+        </div>
+
+        <!-- Audio Toggle -->
+        <button onclick="toggleAudio()" class="w-9 h-9 rounded-full bg-white/70 border border-white/90 flex items-center justify-center text-[#60677A] hover:text-[#20243A] transition shadow-sm" title="Toggle UI sound effects">
+          <i data-lucide="volume-2" id="sound-icon" class="w-4 h-4 text-[#7F56D9]"></i>
+        </button>
+
+        <!-- Mobile Menu Trigger -->
+        <button onclick="toggleMobileMenu()" class="lg:hidden w-9 sm:w-10 h-9 sm:h-10 rounded-2xl bg-white/60 border border-white/80 flex items-center justify-center text-slate-700">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Mobile Dropdown -->
+    <div id="mobile-menu" class="hidden mt-3 jelly-card p-4 space-y-2 lg:hidden shadow-xl">
+      <a href="#hero" onclick="toggleMobileMenu()" class="block px-4 py-2 rounded-xl text-xs font-bold hover:bg-white/80">Home</a>
+      <a href="#prompts-section" onclick="filterByCategory('all'); toggleMobileMenu()" class="block px-4 py-2 rounded-xl text-xs font-bold hover:bg-white/80">All AI Prompts</a>
+      <a href="#prompts-section" onclick="filterByCategory('short-video'); toggleMobileMenu()" class="block px-4 py-2 rounded-xl text-xs font-bold hover:bg-white/80">Short Video Prompts</a>
+      <a href="#prompts-section" onclick="filterByCategory('long-video'); toggleMobileMenu()" class="block px-4 py-2 rounded-xl text-xs font-bold hover:bg-white/80">Long Video Prompts</a>
+      <a href="#prompts-section" onclick="filterByCategory('image'); toggleMobileMenu()" class="block px-4 py-2 rounded-xl text-xs font-bold hover:bg-white/80">Image Prompts</a>
+      <a href="#community-section" onclick="toggleMobileMenu()" class="block px-4 py-2 rounded-xl text-xs font-bold hover:bg-white/80">Join Community</a>
+      <a href="#about-section" onclick="toggleMobileMenu()" class="block px-4 py-2 rounded-xl text-xs font-bold hover:bg-white/80">About Us</a>
+      <a href="admin.html" class="block px-4 py-2 rounded-xl text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100">🔒 Open Admin Panel</a>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="max-w-7xl mx-auto px-3 sm:px-4 mt-6 sm:mt-8 space-y-10 sm:space-y-12">
+
+    <!-- ================= HERO SECTION (From Reference Screenshots) ================= -->
+    <section id="hero" class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+      
+      <!-- Left Hero Jelly Card -->
+      <div class="lg:col-span-7 jelly-card p-6 sm:p-9 md:p-10 relative overflow-hidden">
+        
+        <div class="flex items-center justify-between mb-5 sm:mb-6">
+          <div class="inline-flex items-center gap-2 px-3 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-[#B9E8FF]/80 to-[#DCCBFF]/80 border border-white/80 text-[11px] sm:text-xs font-bold text-[#343b59] shadow-inner">
+            <span class="w-2 h-2 rounded-full bg-[#7655F6]"></span>
+            <span>NEXT-GEN AI PROMPT ENGINE</span>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <span class="text-[11px] px-2.5 py-1 rounded-full bg-white/70 font-bold text-[#60677A] border border-white">Project: pormotes</span>
+          </div>
+        </div>
+
+        <div class="space-y-3 sm:space-y-4">
+          <h1 class="text-2xl sm:text-4xl md:text-5xl font-black text-[#20243A] tracking-tight leading-[1.2]">
+            Unlock Your <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#4F86F7] via-[#7655F6] to-[#E2549E]">Creativity</span> with AI Prompts
+          </h1>
+          <p class="text-[#60677A] text-sm sm:text-base md:text-lg leading-relaxed font-medium">
+            Discover, copy, and download powerful AI prompts for images, short videos, and long videos. Turn your creativity into incredible AI-generated content.
+          </p>
+        </div>
+
+        <!-- Hero Buttons -->
+        <div class="flex flex-wrap items-center gap-3 sm:gap-4 mt-6 sm:mt-8">
+          <a href="#prompts-section" onclick="playChime('bubble')" class="jelly-btn-primary px-6 sm:px-7 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg cursor-pointer">
+            <i data-lucide="compass" class="w-4 h-4"></i>
+            <span>Explore All Prompts</span>
+          </a>
+          <a href="#category-section" onclick="playChime('bubble')" class="jelly-btn-secondary px-5 sm:px-6 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg cursor-pointer">
+            <i data-lucide="layout-grid" class="w-4 h-4"></i>
+            <span>Explore Categories</span>
+          </a>
+          <button onclick="copyShareLink()" class="jelly-btn-glass px-4 sm:px-5 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm flex items-center gap-2">
+            <i data-lucide="share-2" class="w-4 h-4 text-slate-600"></i>
+            <span>Share Hub</span>
+          </button>
+        </div>
+
+        <!-- 4 Jelly Capsule Statistics (Synced from Firebase/Active Database) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 sm:mt-10">
+          
+          <div class="p-3 sm:p-3.5 rounded-3xl bg-gradient-to-b from-[#B9E8FF]/60 to-white/70 border border-white/80 shadow-sm flex items-center gap-2.5 sm:gap-3">
+            <div class="w-9 sm:w-10 h-9 sm:h-10 rounded-2xl bg-[#B9E8FF] flex items-center justify-center text-[#1E5F8A] font-extrabold text-sm shadow-inner shrink-0">
+              <i data-lucide="image" class="w-4 sm:w-5 h-4 sm:h-5"></i>
+            </div>
+            <div>
+              <div class="text-base sm:text-lg font-black text-[#20243A]" id="stat-image-count">...</div>
+              <div class="text-[10px] sm:text-[11px] font-semibold text-[#60677A]">Image Prompts</div>
+            </div>
+          </div>
+
+          <div class="p-3 sm:p-3.5 rounded-3xl bg-gradient-to-b from-[#D2FFE9]/60 to-white/70 border border-white/80 shadow-sm flex items-center gap-2.5 sm:gap-3">
+            <div class="w-9 sm:w-10 h-9 sm:h-10 rounded-2xl bg-[#D2FFE9] flex items-center justify-center text-[#127A50] font-extrabold text-sm shadow-inner shrink-0">
+              <i data-lucide="video" class="w-4 sm:w-5 h-4 sm:h-5"></i>
+            </div>
+            <div>
+              <div class="text-base sm:text-lg font-black text-[#20243A]" id="stat-short-count">...</div>
+              <div class="text-[10px] sm:text-[11px] font-semibold text-[#60677A]">Short Videos</div>
+            </div>
+          </div>
+
+          <div class="p-3 sm:p-3.5 rounded-3xl bg-gradient-to-b from-[#DCCBFF]/60 to-white/70 border border-white/80 shadow-sm flex items-center gap-2.5 sm:gap-3">
+            <div class="w-9 sm:w-10 h-9 sm:h-10 rounded-2xl bg-[#DCCBFF] flex items-center justify-center text-[#5536A0] font-extrabold text-sm shadow-inner shrink-0">
+              <i data-lucide="film" class="w-4 sm:w-5 h-4 sm:h-5"></i>
+            </div>
+            <div>
+              <div class="text-base sm:text-lg font-black text-[#20243A]" id="stat-long-count">...</div>
+              <div class="text-[10px] sm:text-[11px] font-semibold text-[#60677A]">Long Videos</div>
+            </div>
+          </div>
+
+          <div class="p-3 sm:p-3.5 rounded-3xl bg-gradient-to-b from-[#FFD5EB]/60 to-white/70 border border-white/80 shadow-sm flex items-center gap-2.5 sm:gap-3">
+            <div class="w-9 sm:w-10 h-9 sm:h-10 rounded-2xl bg-[#FFD5EB] flex items-center justify-center text-[#A6276E] font-extrabold text-sm shadow-inner shrink-0">
+              <i data-lucide="flame" class="w-4 sm:w-5 h-4 sm:h-5"></i>
+            </div>
+            <div>
+              <div class="text-base sm:text-lg font-black text-[#20243A]" id="stat-total-count">...</div>
+              <div class="text-[10px] sm:text-[11px] font-semibold text-[#60677A]">Total Prompts</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Right Interactive Widgets Panel (From Reference Screenshots) -->
+      <div class="lg:col-span-5 space-y-4">
+        
+        <div class="grid grid-cols-2 gap-4">
+          
+          <!-- Live Analog / Digital Clock -->
+          <div class="jelly-card p-4 sm:p-5 flex flex-col justify-between h-44 sm:h-48 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] sm:text-xs font-bold text-[#60677A] uppercase tracking-wider">World Time</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#B9E8FF] text-[#1E5F8A]">ACTIVE</span>
+            </div>
+            
+            <div class="text-center my-auto">
+              <div id="widget-clock" class="text-2xl sm:text-3xl font-extrabold text-[#20243A] tracking-tight">12:45:00</div>
+              <div id="widget-date" class="text-[11px] sm:text-xs font-semibold text-[#60677A] mt-1">Thursday, Oct 29</div>
+            </div>
+
+            <div class="flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-slate-500 pt-2 border-t border-white/60">
+              <span>Timezone</span>
+              <span class="text-[#7655F6]">UTC+5 (Live)</span>
+            </div>
+          </div>
+
+          <!-- Rest of the Day Slider Widget -->
+          <div class="jelly-card p-4 sm:p-5 flex flex-col justify-between h-44 sm:h-48 bg-gradient-to-br from-[#FFD5EB]/40 to-white/60">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] sm:text-xs font-bold text-[#60677A]">Rest of today</span>
+              <i data-lucide="hourglass" class="w-4 h-4 text-pink-500"></i>
+            </div>
+
+            <div class="text-center my-auto">
+              <div class="text-xl sm:text-2xl font-black text-[#20243A]" id="hours-left-text">5h 20m</div>
+              <span class="text-[10px] sm:text-[11px] text-[#60677A] font-semibold">Remaining in day</span>
+              
+              <div class="w-full bg-white/70 h-2.5 sm:h-3 rounded-full mt-2.5 overflow-hidden p-[2px] border border-white">
+                <div id="day-progress-bar" class="bg-gradient-to-r from-pink-400 to-purple-500 h-full rounded-full w-[72%] transition-all duration-500"></div>
+              </div>
+            </div>
+
+            <div class="text-[10px] text-center font-bold text-purple-600 bg-white/60 py-1 rounded-full">
+              Prompt Generator Ready
+            </div>
+          </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          
+          <!-- Hydration Tracker (+/-) -->
+          <div class="jelly-card p-3.5 sm:p-4 flex items-center justify-between bg-[#B9E8FF]/30">
+            <div class="flex items-center gap-3">
+              <div class="w-10 sm:w-11 h-10 sm:h-11 rounded-2xl bg-[#B9E8FF] flex items-center justify-center text-[#1E5F8A] shadow-inner shrink-0">
+                <i data-lucide="cup-soda" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="text-[11px] font-bold text-[#60677A]">Drink Water</div>
+                <div class="text-xs sm:text-sm font-extrabold text-[#20243A]"><span id="water-count">5</span>/8 cup</div>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-1.5">
+              <button onclick="updateWater(-1)" class="w-7 sm:w-8 h-7 sm:h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center font-bold text-sm shadow-sm active:scale-95 transition">-</button>
+              <button onclick="updateWater(1)" class="w-7 sm:w-8 h-7 sm:h-8 rounded-full bg-[#4F86F7] hover:bg-[#3D74E5] flex items-center justify-center text-white font-bold text-sm shadow-sm active:scale-95 transition">+</button>
+            </div>
+          </div>
+
+          <!-- Cute Jelly Cat Companion -->
+          <div class="jelly-card p-3.5 sm:p-4 flex items-center gap-3 bg-gradient-to-r from-[#DCCBFF]/40 to-white/60">
+            <div class="w-10 sm:w-11 h-10 sm:h-11 rounded-2xl bg-[#DCCBFF] flex items-center justify-center text-2xl animate-bounce shadow-inner shrink-0">
+              🐱
+            </div>
+            <div>
+              <div class="text-[11px] font-bold text-[#5536A0]">Jelly Assistant</div>
+              <div class="text-[11px] font-medium text-[#60677A]">Click any prompt to copy syntax instantly!</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Sync Pill Status Banner -->
+        <div class="jelly-card px-4 sm:px-5 py-3 flex items-center justify-between text-xs font-bold text-[#20243A] bg-white/70">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-pink-500 animate-pulse"></span>
+            <span>⚡ AI Cloud Sync: <span class="text-purple-600 font-extrabold">Midjourney v6.1 & Sora Ready</span></span>
+          </div>
+          <button onclick="refreshFirebaseData()" class="text-[11px] px-2.5 py-1 rounded-full bg-white font-bold text-slate-700 hover:text-purple-600 shadow-sm border border-slate-100 transition">
+            Sync
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= THREE MAIN PROMPT CATEGORIES ================= -->
+    <section id="category-section" class="space-y-6 pt-2">
+      
+      <div class="text-center max-w-2xl mx-auto space-y-1.5 sm:space-y-2">
+        <h2 class="text-2xl sm:text-3xl font-black text-[#20243A]">Browse by Category</h2>
+        <p class="text-xs sm:text-sm text-[#60677A] font-medium">Click any jelly capsule below to filter the entire prompt collection.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+
+        <!-- Short Video Prompts -->
+        <div onclick="filterByCategory('short-video')" class="jelly-card p-6 cursor-pointer group bg-gradient-to-b from-[#D2FFE9]/50 via-white/60 to-white/80 border-t-2 border-emerald-200">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-13 h-13 rounded-3xl bg-[#D2FFE9] p-3.5 flex items-center justify-center text-[#127A50] shadow-md group-hover:scale-110 transition-transform">
+              <i data-lucide="video" class="w-6 h-6"></i>
+            </div>
+            <span class="text-xs font-bold px-3 py-1 rounded-full bg-white/80 text-emerald-700 border border-emerald-100">
+              Shorts & Reels
+            </span>
+          </div>
+          <h3 class="text-lg sm:text-xl font-black text-[#20243A] group-hover:text-emerald-700 transition">Short Video Prompts</h3>
+          <p class="text-xs sm:text-sm text-[#60677A] mt-2 font-medium leading-relaxed">
+            Prompts for engaging AI-generated short videos and social media content (9:16 vertical, Runway Gen-3, Sora).
+          </p>
+          <div class="mt-5 flex items-center justify-between text-xs font-bold text-emerald-700">
+            <span id="cat-short-count-pill">Explore Prompts</span>
+            <span class="w-7 h-7 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:translate-x-1 transition">→</span>
+          </div>
+        </div>
+
+        <!-- Long Video Prompts -->
+        <div onclick="filterByCategory('long-video')" class="jelly-card p-6 cursor-pointer group bg-gradient-to-b from-[#DCCBFF]/50 via-white/60 to-white/80 border-t-2 border-purple-200">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-13 h-13 rounded-3xl bg-[#DCCBFF] p-3.5 flex items-center justify-center text-[#5536A0] shadow-md group-hover:scale-110 transition-transform">
+              <i data-lucide="film" class="w-6 h-6"></i>
+            </div>
+            <span class="text-xs font-bold px-3 py-1 rounded-full bg-white/80 text-purple-700 border border-purple-100">
+              Cinematic & Film
+            </span>
+          </div>
+          <h3 class="text-lg sm:text-xl font-black text-[#20243A] group-hover:text-purple-700 transition">Long Video Prompts</h3>
+          <p class="text-xs sm:text-sm text-[#60677A] mt-2 font-medium leading-relaxed">
+            Detailed prompts for cinematic scenes, storytelling, multi-shot sequences, and long-form AI videos.
+          </p>
+          <div class="mt-5 flex items-center justify-between text-xs font-bold text-purple-700">
+            <span id="cat-long-count-pill">Explore Prompts</span>
+            <span class="w-7 h-7 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:translate-x-1 transition">→</span>
+          </div>
+        </div>
+
+        <!-- Image Prompts -->
+        <div onclick="filterByCategory('image')" class="jelly-card p-6 cursor-pointer group bg-gradient-to-b from-[#FFD5EB]/50 via-white/60 to-white/80 border-t-2 border-pink-200">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-13 h-13 rounded-3xl bg-[#FFD5EB] p-3.5 flex items-center justify-center text-[#A6276E] shadow-md group-hover:scale-110 transition-transform">
+              <i data-lucide="image" class="w-6 h-6"></i>
+            </div>
+            <span class="text-xs font-bold px-3 py-1 rounded-full bg-white/80 text-pink-700 border border-pink-100">
+              Midjourney & DALL-E
+            </span>
+          </div>
+          <h3 class="text-lg sm:text-xl font-black text-[#20243A] group-hover:text-pink-700 transition">Image Prompts</h3>
+          <p class="text-xs sm:text-sm text-[#60677A] mt-2 font-medium leading-relaxed">
+            Creative prompts for AI-generated images, characters, posters, photorealistic portraits, and digital artwork.
+          </p>
+          <div class="mt-5 flex items-center justify-between text-xs font-bold text-pink-700">
+            <span id="cat-image-count-pill">Explore Prompts</span>
+            <span class="w-7 h-7 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:translate-x-1 transition">→</span>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= ALL PROMPTS SECTION ================= -->
+    <section id="prompts-section" class="space-y-6 pt-4">
+      
+      <!-- Section Header -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-3 sm:gap-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#B9E8FF]/60 text-xs font-bold text-[#1E5F8A] mb-2">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span>EXPLORE ALL AI PROMPTS</span>
+          </div>
+          <h2 class="text-2xl sm:text-4xl font-black text-[#20243A]">Explore All AI Prompts</h2>
+          <p class="text-xs sm:text-sm text-[#60677A] font-medium mt-1">Browse, search, copy prompt text with one click, or download directly as a formatted .txt file.</p>
+        </div>
+
+        <div class="px-4 py-2 rounded-full jelly-card-subtle text-xs font-bold text-slate-700 self-start md:self-auto">
+          Showing: <span id="prompt-count-badge" class="text-purple-600 font-extrabold">Loading...</span>
+        </div>
+      </div>
+
+      <!-- Filter Controls Bar -->
+      <div class="jelly-card p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+        
+        <!-- Search Input -->
+        <div class="relative w-full md:w-80">
+          <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input 
+            type="text" 
+            id="search-input" 
+            placeholder="Search prompts by keyword, engine, style..." 
+            oninput="handleSearch(this.value)"
+            class="w-full pl-11 pr-4 py-2.5 rounded-full bg-white/70 border border-white/90 text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50 shadow-inner"
+          />
+        </div>
+
+        <!-- Category Pills -->
+        <div class="flex flex-wrap items-center justify-center gap-2 w-full md:w-auto">
+          <button onclick="filterByCategory('all')" id="pill-all" class="category-pill px-4 py-2 rounded-full text-xs font-bold transition-all bg-gradient-to-r from-[#4F86F7] to-[#7655F6] text-white shadow-sm">
+            All Prompts
+          </button>
+          <button onclick="filterByCategory('short-video')" id="pill-short-video" class="category-pill px-4 py-2 rounded-full text-xs font-bold transition-all bg-white/70 text-slate-700 hover:bg-white">
+            Short Video
+          </button>
+          <button onclick="filterByCategory('long-video')" id="pill-long-video" class="category-pill px-4 py-2 rounded-full text-xs font-bold transition-all bg-white/70 text-slate-700 hover:bg-white">
+            Long Video
+          </button>
+          <button onclick="filterByCategory('image')" id="pill-image" class="category-pill px-4 py-2 rounded-full text-xs font-bold transition-all bg-white/70 text-slate-700 hover:bg-white">
+            Image Prompts
+          </button>
+        </div>
+
+        <!-- Sort Select -->
+        <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+          <span class="text-xs font-bold text-slate-500 whitespace-nowrap">Sort:</span>
+          <select id="sort-select" onchange="handleSort(this.value)" class="px-3.5 py-2 rounded-full bg-white/70 border border-white/90 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-400/50">
+            <option value="newest">Newest First</option>
+            <option value="popular">Most Popular</option>
+            <option value="oldest">Oldest First</option>
+          </select>
+        </div>
+
+      </div>
+
+      <!-- Prompt Cards Grid (Laptop 3 cols, Tablet 2 cols, Mobile 1 col) -->
+      <div id="prompts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="hidden jelly-card p-10 sm:p-12 text-center max-w-lg mx-auto space-y-4">
+        <div class="w-16 h-16 rounded-full bg-[#FFD5EB] flex items-center justify-center text-3xl mx-auto">
+          🔍
+        </div>
+        <h3 class="text-lg sm:text-xl font-bold text-slate-800">No prompts found</h3>
+        <p class="text-xs sm:text-sm text-slate-500">We couldn't find any prompts matching your search filters. Try using different keywords or resetting the category.</p>
+        <button onclick="resetFilters()" class="jelly-btn-primary px-5 py-2.5 rounded-full text-xs font-bold shadow-md">
+          Reset All Filters
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ================= STAY CONNECTED / SOCIAL COMMUNITY SECTION ================= -->
+    <section id="community-section" class="space-y-6 pt-6">
+      
+      <div class="text-center max-w-2xl mx-auto space-y-1.5 sm:space-y-2">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFD5EB]/60 text-xs font-bold text-[#A6276E]">
+          <i data-lucide="users" class="w-3.5 h-3.5"></i>
+          <span>LIVE CONTACT & SOCIAL HUB</span>
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-black text-[#20243A]">Stay Connected & Join Our Community</h2>
+        <p class="text-xs sm:text-sm text-[#60677A] font-medium">Connect directly with prompt creators, get instant notifications on new drops, and request custom prompts.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+        <!-- WhatsApp Card -->
+        <div class="jelly-card p-5 bg-gradient-to-b from-[#D2FFE9]/50 via-white/70 to-white/80 border border-white flex flex-col justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-[#D2FFE9] flex items-center justify-center text-[#127A50] shadow-md shrink-0">
+              <i data-lucide="message-circle" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <div class="text-base font-extrabold text-[#20243A]">WhatsApp</div>
+              <div class="text-xs font-semibold text-[#127A50]">VIP Community</div>
+            </div>
+          </div>
+          <p class="text-xs text-[#60677A] mt-3">Receive instant alerts when new Sora, Midjourney, and Runway prompts go live.</p>
+          <div class="mt-5 flex items-center gap-2">
+            <button onclick="openExternal('https://chat.whatsapp.com/prompthubpro')" class="flex-1 py-2 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold shadow-md transition">Chat Now</button>
+            <button onclick="copyToClipboard('https://chat.whatsapp.com/prompthubpro', 'WhatsApp Link copied!')" class="px-3 py-2 rounded-full bg-white/80 hover:bg-white text-slate-700 text-xs font-bold border border-white shadow-sm">Copy</button>
+          </div>
+        </div>
+
+        <!-- Telegram Card -->
+        <div class="jelly-card p-5 bg-gradient-to-b from-[#B9E8FF]/50 via-white/70 to-white/80 border border-white flex flex-col justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-[#B9E8FF] flex items-center justify-center text-[#1E5F8A] shadow-md shrink-0">
+              <i data-lucide="send" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <div class="text-base font-extrabold text-[#20243A]">Telegram</div>
+              <div class="text-xs font-semibold text-[#1E5F8A]">Prompt Channel</div>
+            </div>
+          </div>
+          <p class="text-xs text-[#60677A] mt-3">Join creators sharing seed numbers, lighting prompts, and uncompressed artwork.</p>
+          <div class="mt-5 flex items-center gap-2">
+            <button onclick="openExternal('https://t.me/prompthubpro')" class="flex-1 py-2 rounded-full bg-[#229ED9] hover:bg-[#1B8ABF] text-white text-xs font-bold shadow-md transition">Join Now</button>
+            <button onclick="copyToClipboard('https://t.me/prompthubpro', 'Telegram link copied!')" class="px-3 py-2 rounded-full bg-white/80 hover:bg-white text-slate-700 text-xs font-bold border border-white shadow-sm">Copy</button>
+          </div>
+        </div>
+
+        <!-- TikTok Card -->
+        <div class="jelly-card p-5 bg-gradient-to-b from-[#FFD5EB]/50 via-white/70 to-white/80 border border-white flex flex-col justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-[#FFD5EB] flex items-center justify-center text-[#A6276E] shadow-md shrink-0">
+              <i data-lucide="video" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <div class="text-base font-extrabold text-[#20243A]">TikTok</div>
+              <div class="text-xs font-semibold text-[#A6276E]">@PromptHubPro</div>
+            </div>
+          </div>
+          <p class="text-xs text-[#60677A] mt-3">Watch 15-second visual comparisons: Prompt Text vs Final AI Rendered Video.</p>
+          <div class="mt-5 flex items-center gap-2">
+            <button onclick="openExternal('https://tiktok.com/@prompthubpro')" class="flex-1 py-2 rounded-full bg-[#111111] hover:bg-black text-white text-xs font-bold shadow-md transition">Follow Us</button>
+            <button onclick="copyToClipboard('https://tiktok.com/@prompthubpro', 'TikTok profile copied!')" class="px-3 py-2 rounded-full bg-white/80 hover:bg-white text-slate-700 text-xs font-bold border border-white shadow-sm">Copy</button>
+          </div>
+        </div>
+
+        <!-- Support Card -->
+        <div class="jelly-card p-5 bg-gradient-to-b from-[#DCCBFF]/50 via-white/70 to-white/80 border border-white flex flex-col justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-[#DCCBFF] flex items-center justify-center text-[#5536A0] shadow-md shrink-0">
+              <i data-lucide="help-circle" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <div class="text-base font-extrabold text-[#20243A]">Support</div>
+              <div class="text-xs font-semibold text-[#5536A0]">24/7 Creator Care</div>
+            </div>
+          </div>
+          <p class="text-xs text-[#60677A] mt-3">Have issues with aspect ratios, camera parameters, or need custom enterprise prompts?</p>
+          <div class="mt-5 flex items-center gap-2">
+            <button onclick="openExternal('mailto:support@prompthubpro.com')" class="flex-1 py-2 rounded-full jelly-btn-primary text-xs font-bold shadow-md transition">Contact Us</button>
+            <button onclick="copyToClipboard('support@prompthubpro.com', 'Support email copied!')" class="px-3 py-2 rounded-full bg-white/80 hover:bg-white text-slate-700 text-xs font-bold border border-white shadow-sm">Copy</button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= ABOUT SECTION ================= -->
+    <section id="about-section" class="jelly-card p-6 sm:p-10 space-y-5">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-[#B9E8FF] flex items-center justify-center text-[#1E5F8A]">
+          <i data-lucide="info" class="w-5 h-5"></i>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-black text-[#20243A]">About Prompt Hub Pro</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="md:col-span-2 space-y-3.5 text-xs sm:text-sm text-[#60677A] leading-relaxed font-medium">
+          <p>
+            <strong class="text-[#20243A]">Prompt Hub Pro</strong> is a creative collection of AI prompts designed to help creators explore AI image generation, short videos, long videos, and digital storytelling. Find inspiration, copy useful prompts, and create your next project.
+          </p>
+          <p>
+            Connected in real-time to Cloud Firestore (<code class="bg-white/80 px-2 py-0.5 rounded text-[#7F56D9] font-mono-code font-bold">pormotes</code>). Any prompts created or updated by administrators are immediately broadcast to all active visitors.
+          </p>
+          <div class="p-3.5 rounded-2xl bg-white/60 border border-white flex items-center gap-3 text-xs text-slate-700 font-semibold">
+            <span class="text-xl">🛡️</span>
+            <span>All public prompts are free to copy and download without account registration or login required.</span>
+          </div>
+        </div>
+
+        <div class="jelly-card-subtle p-5 space-y-3 bg-white/60 flex flex-col justify-between">
+          <div>
+            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Engine Compatibility</h4>
+            <div class="flex flex-wrap gap-1.5 mt-2.5">
+              <span class="px-2.5 py-1 rounded-full bg-[#B9E8FF] text-[#1E5F8A] text-xs font-bold">Midjourney v6.1</span>
+              <span class="px-2.5 py-1 rounded-full bg-[#FFD5EB] text-[#A6276E] text-xs font-bold">OpenAI Sora</span>
+              <span class="px-2.5 py-1 rounded-full bg-[#D2FFE9] text-[#127A50] text-xs font-bold">Runway Gen-3</span>
+              <span class="px-2.5 py-1 rounded-full bg-[#DCCBFF] text-[#5536A0] text-xs font-bold">FLUX.1 Schnell</span>
+              <span class="px-2.5 py-1 rounded-full bg-white text-slate-700 text-xs font-bold border border-slate-200">DALL-E 3</span>
+            </div>
+          </div>
+          <div class="text-[11px] text-purple-700 pt-3 border-t border-slate-200/60 font-semibold flex items-center justify-between">
+            <span>Admin Gateway</span>
+            <a href="admin.html" class="underline hover:text-purple-900">Manage Hub →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="max-w-7xl mx-auto px-4 mt-12 sm:mt-16">
+    <div class="jelly-card p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#7F56D9] to-[#00C49F] p-[2px] shadow-sm flex items-center justify-center">
+          <div class="w-full h-full bg-white/80 rounded-[14px] flex items-center justify-center">
+            <i data-lucide="sparkles" class="w-5 h-5 text-[#7F56D9]"></i>
+          </div>
+        </div>
+        <div>
+          <div class="font-extrabold text-sm sm:text-base text-[#20243A]">Prompt Hub Pro</div>
+          <div class="text-xs text-[#60677A]">Your Ultimate Hub for AI Prompts</div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs font-bold text-[#60677A]">
+        <a href="#hero" class="hover:text-[#20243A] transition">Home</a>
+        <a href="#prompts-section" class="hover:text-[#20243A] transition">All Prompts</a>
+        <a href="#category-section" class="hover:text-[#20243A] transition">Categories</a>
+        <a href="#community-section" class="hover:text-[#20243A] transition">Community</a>
+        <a href="#about-section" class="hover:text-[#20243A] transition">About</a>
+      </div>
+
+      <div class="text-xs text-slate-500 font-medium">
+        © <span id="current-year">2026</span> Prompt Hub Pro. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= PROMPT DETAIL MODAL ================= -->
+  <div id="prompt-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-md">
+    <div class="jelly-card modal-enter w-full max-w-3xl max-h-[92vh] overflow-y-auto bg-white/95 p-5 sm:p-8 relative shadow-2xl">
+      
+      <button onclick="closeModal()" class="absolute top-4 right-4 sm:top-5 sm:right-5 w-9 sm:w-10 h-9 sm:h-10 rounded-full bg-white/80 hover:bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-sm transition">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div id="modal-content" class="space-y-5">
+        <!-- Rendered dynamically -->
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= TOAST CONTAINER ================= -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 pointer-events-none flex flex-col gap-2"></div>
+
+  <!-- ================= JAVASCRIPT & LIVE FIREBASE INTEGRATION ================= -->
+  <script>
+    /* ==========================================================
+       1. FIREBASE CONFIGURATION (Direct Project Connection)
+       ========================================================== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyD5yhS6PCaafvS18TPRVbMM5Wyv3BZfvtY",
+      authDomain: "pormotes.firebaseapp.com",
+      databaseURL: "https://pormotes-default-rtdb.firebaseio.com",
+      projectId: "pormotes",
+      storageBucket: "pormotes.firebasestorage.app",
+      messagingSenderId: "86267086345",
+      appId: "1:86267086345:web:21b93157a1822cdedf9ad8",
+      measurementId: "G-LKV3NPC75G"
+    };
+
+    let db = null;
+    let isFirebaseConnected = false;
+
+    // Fallback seed prompts for instant rendering
+    const fallbackPrompts = [
+      {
+        id: "p1",
+        title: "Cyberpunk Tokyo Neon Rain Alleyway",
+        slug: "cyberpunk-tokyo-neon-rain",
+        category: "image",
+        categoryLabel: "Image Prompt",
+        categoryColor: "bg-[#FFD5EB] text-[#A6276E] border-pink-200",
+        engine: "Midjourney v6.1",
+        description: "Ultra-detailed rainy cyberpunk street with vibrant neon reflections and volumetric fog.",
+        promptText: "/imagine prompt: Cinematic medium shot of a rainy alleyway in Neo-Tokyo, reflective wet asphalt puddles mirroring glowing holographic advertisements, steam rising from street ramen carts, cyan and magenta color grading, intricate cybernetic lanterns, shot on 35mm Arri Alexa, f/1.4, photorealistic, 8k resolution, volumetric atmosphere, Raytracing, octane render --ar 16:9 --style raw --v 6.0",
+        imageUrl: "https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=1200&q=80",
+        videoUrl: null,
+        likes: 1420,
+        createdAt: "2026-10-25"
+      },
+      {
+        id: "p2",
+        title: "Hyper-Speed FPV Drone Mountain Dive",
+        slug: "fpv-drone-mountain-dive",
+        category: "short-video",
+        categoryLabel: "Short Video",
+        categoryColor: "bg-[#D2FFE9] text-[#127A50] border-emerald-200",
+        engine: "Runway Gen-3",
+        description: "Dynamic 9:16 vertical video prompt for viral social reels showing high speed aerial vertigo.",
+        promptText: "Vertical 9:16 camera movement, FPV racing drone diving down a razor-sharp snowy alpine peak in the Swiss Alps, flying inches above jagged frozen rocks, golden hour sunset light hitting glaciers, lens flare, intense motion blur on edges, cinematic 60fps slow-motion transition at bottom of cliff, ultra high definition 4K resolution, realistic wind physics.",
+        imageUrl: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80",
+        videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-flying-through-the-clouds-in-the-sky-41489-large.mp4",
+        likes: 980,
+        createdAt: "2026-10-26"
+      },
+      {
+        id: "p3",
+        title: "Sci-Fi Deep Space Exploration Epic",
+        slug: "scifi-deep-space-exploration",
+        category: "long-video",
+        categoryLabel: "Long Video",
+        categoryColor: "bg-[#DCCBFF] text-[#5536A0] border-purple-200",
+        engine: "OpenAI Sora",
+        description: "Multi-sequence cinematic storytelling prompt with slow dolly shots and interstellar scale.",
+        promptText: "Scene 1: Wide cinematic 2.39:1 shot, a massive interstellar colony ark ship navigating through the colorful ring system of an emerald gas giant. Slow pan right reveal. Scene 2: Cut to interior observation deck, lone astronaut in EVA suit staring into swirling aurora storm. Soft interior orange safety lighting, hyper-realistic reflections on visor. Atmospheric strings soundtrack feel, Hans Zimmer interstellar atmosphere, master film cinematography.",
+        imageUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80",
+        videoUrl: null,
+        likes: 1250,
+        createdAt: "2026-10-27"
+      },
+      {
+        id: "p4",
+        title: "Dreamy 3D Pastel Jelly Character in Cloud",
+        slug: "dreamy-pastel-jelly-character",
+        category: "image",
+        categoryLabel: "Image Prompt",
+        categoryColor: "bg-[#FFD5EB] text-[#A6276E] border-pink-200",
+        engine: "Midjourney v6.1",
+        description: "Cute translucent jelly character floating on glowing clouds matching modern 3D UI aesthetics.",
+        promptText: "Cute translucent 3D jelly mascot resting gently on a fluffy cotton candy cloud, pastel color palette with sky blue #B9E8FF, soft baby pink, and lavender accents. Subsurface scattering, glossy silicone texture, glassmorphism refraction, soft studio lighting, cute expressive kawaii eyes, rendered in Cinema 4D and Redshift, minimal clean aesthetic, 8k --ar 1:1 --v 6.0",
+        imageUrl: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=80",
+        videoUrl: null,
+        likes: 2150,
+        createdAt: "2026-10-28"
+      },
+      {
+        id: "p5",
+        title: "Cyberpunk Street Food Noodle Master",
+        slug: "cyberpunk-street-food-short",
+        category: "short-video",
+        categoryLabel: "Short Video",
+        categoryColor: "bg-[#D2FFE9] text-[#127A50] border-emerald-200",
+        engine: "Runway Gen-3",
+        description: "Quick 8-second macro shot of sizzling wok noodles under neon shop rain.",
+        promptText: "Macro dynamic camera tracking shot, robotic chef hands tossing steaming wok noodles with golden sparks and fiery flames, night street market, neon pink reflections on steel utensils, high frame rate 120fps slow-motion water droplets, crisp audio visual sync, photorealistic cinematic lighting.",
+        imageUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
+        videoUrl: null,
+        likes: 740,
+        createdAt: "2026-10-29"
+      },
+      {
+        id: "p6",
+        title: "Documentary: Ancient Lost Jungle Citadel",
+        slug: "ancient-lost-jungle-citadel",
+        category: "long-video",
+        categoryLabel: "Long Video",
+        categoryColor: "bg-[#DCCBFF] text-[#5536A0] border-purple-200",
+        engine: "OpenAI Sora",
+        description: "Cinematic drone expedition through dense tropical mist revealing overgrown stone temples.",
+        promptText: "Documentary style drone pass through misty Amazonian canopy at sunrise, dense vegetation parting to reveal towering forgotten stone pyramids covered in vines and waterfalls. Golden god rays piercing through dense morning fog, birds flying out of temple ruins, National Geographic cinematic color palette, anamorphic lens, slow sweeping camera movements.",
+        imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80",
+        videoUrl: null,
+        likes: 1890,
+        createdAt: "2026-10-24"
+      }
+    ];
+
+    let promptsDatabase = [...fallbackPrompts];
+    let currentCategory = 'all';
+    let searchQuery = '';
+    let currentSort = 'newest';
+    let waterGlasses = 5;
+    let audioEnabled = true;
+
+    /* Initialize Firebase with the provided configuration */
+    function initFirebase() {
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.firestore();
+        updateFirebaseStatus('connected', 'Live: pormotes');
+        subscribeToFirestorePrompts();
+      } catch (err) {
+        console.warn("Firebase Init notice:", err);
+        updateFirebaseStatus('fallback', 'Local Cache Active');
+        // Check for local storage sync from admin panel
+        loadLocalStoragePrompts();
+      }
+    }
+
+    function updateFirebaseStatus(state, label) {
+      const dot = document.getElementById('firebase-dot');
+      const text = document.getElementById('firebase-status-text');
+      if (!dot || !text) return;
+
+      if (state === 'connected') {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+        text.textContent = label;
+      } else if (state === 'fallback') {
+        dot.className = "w-2 h-2 rounded-full bg-blue-500";
+        text.textContent = label;
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-amber-400";
+        text.textContent = label;
+      }
+    }
+
+    /* Real-Time Firestore Listener for 'prompts' collection */
+    function subscribeToFirestorePrompts() {
+      if (!db) return;
+
+      db.collection("prompts")
+        .where("isPublished", "==", true)
+        .onSnapshot((snapshot) => {
+          if (!snapshot.empty) {
+            const fetched = [];
+            snapshot.forEach((doc) => {
+              const data = doc.data();
+              fetched.push({
+                id: doc.id,
+                title: data.title || "Untitled Prompt",
+                slug: data.slug || "prompt",
+                category: data.category || "image",
+                categoryLabel: data.category === 'short-video' ? 'Short Video' : data.category === 'long-video' ? 'Long Video' : 'Image Prompt',
+                categoryColor: data.category === 'short-video' ? 'bg-[#D2FFE9] text-[#127A50] border-emerald-200' : data.category === 'long-video' ? 'bg-[#DCCBFF] text-[#5536A0] border-purple-200' : 'bg-[#FFD5EB] text-[#A6276E] border-pink-200',
+                engine: data.engine || 'Midjourney v6.1',
+                description: data.description || "",
+                promptText: data.promptText || "",
+                imageUrl: data.imageUrl || "https://placehold.co/600x400/B9E8FF/20243A?text=Prompt+Preview",
+                videoUrl: data.videoUrl || null,
+                likes: data.likes || 120,
+                createdAt: data.createdAt ? (typeof data.createdAt.toDate === 'function' ? data.createdAt.toDate().toISOString().split('T')[0] : data.createdAt) : "2026-10-29"
+              });
+            });
+            promptsDatabase = fetched;
+            updateFirebaseStatus('connected', 'Firestore Synced');
+            updateCounters();
+            renderPrompts();
+          } else {
+            // If empty, load admin local cache or fallback
+            loadLocalStoragePrompts();
+          }
+        }, (err) => {
+          console.warn("Firestore access error:", err.message);
+          updateFirebaseStatus('fallback', 'Local Cache Active');
+          loadLocalStoragePrompts();
+        });
+    }
+
+    function loadLocalStoragePrompts() {
+      const stored = localStorage.getItem('prompthub_prompts_db_v1');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          const published = parsed.filter(p => p.isPublished !== false);
+          if (published.length > 0) {
+            promptsDatabase = published;
+          }
+        } catch(e) {}
+      }
+      updateCounters();
+      renderPrompts();
+    }
+
+    function refreshFirebaseData() {
+      playChime('bubble');
+      showToast('🔄 Synchronizing with Firebase project pormotes...');
+      initFirebase();
+    }
+
+    /* ==========================================================
+       2. WEB AUDIO API CHIME EFFECTS
+       ========================================================== */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playChime(type = 'bubble') {
+      if (!audioEnabled) return;
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'bubble') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(587.33, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+          osc.start(now);
+          osc.stop(now + 0.18);
+        } else if (type === 'copy') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.08);
+          osc.frequency.setValueAtTime(783.99, now + 0.16);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+          osc.start(now);
+          osc.stop(now + 0.28);
+        } else if (type === 'download') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(783.99, now);
+          osc.frequency.exponentialRampToValueAtTime(440, now + 0.2);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        }
+      } catch (e) {}
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      const icon = document.getElementById('sound-icon');
+      if (audioEnabled) {
+        icon.setAttribute('data-lucide', 'volume-2');
+        showToast('🔊 UI Sounds Enabled');
+        playChime('bubble');
+      } else {
+        icon.setAttribute('data-lucide', 'volume-x');
+        showToast('🔇 UI Sounds Muted');
+      }
+      lucide.createIcons();
+    }
+
+    /* ==========================================================
+       3. PROMPT RENDERING & FILTERING
+       ========================================================== */
+    function updateCounters() {
+      const total = promptsDatabase.length;
+      const imageCount = promptsDatabase.filter(p => p.category === 'image').length;
+      const shortCount = promptsDatabase.filter(p => p.category === 'short-video').length;
+      const longCount = promptsDatabase.filter(p => p.category === 'long-video').length;
+
+      document.getElementById('stat-total-count').textContent = total;
+      document.getElementById('stat-image-count').textContent = imageCount;
+      document.getElementById('stat-short-count').textContent = shortCount;
+      document.getElementById('stat-long-count').textContent = longCount;
+
+      document.getElementById('cat-image-count-pill').textContent = `Explore ${imageCount} Prompts`;
+      document.getElementById('cat-short-count-pill').textContent = `Explore ${shortCount} Prompts`;
+      document.getElementById('cat-long-count-pill').textContent = `Explore ${longCount} Prompts`;
+    }
+
+    function renderPrompts() {
+      const container = document.getElementById('prompts-grid');
+      const emptyState = document.getElementById('empty-state');
+      const countBadge = document.getElementById('prompt-count-badge');
+
+      let filtered = promptsDatabase.filter(p => {
+        const matchesCategory = (currentCategory === 'all') || (p.category === currentCategory);
+        const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              p.promptText.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              p.description.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesSearch;
+      });
+
+      if (currentSort === 'newest') {
+        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      } else if (currentSort === 'oldest') {
+        filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      } else if (currentSort === 'popular') {
+        filtered.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+      }
+
+      countBadge.textContent = `${filtered.length} prompt${filtered.length === 1 ? '' : 's'}`;
+
+      if (filtered.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+
+      container.innerHTML = filtered.map(prompt => `
+        <div class="jelly-card p-4 sm:p-5 flex flex-col justify-between group hover:border-white transition-all">
+          
+          <!-- Image / Video Thumbnail -->
+          <div class="relative w-full h-48 sm:h-52 rounded-2xl overflow-hidden mb-3.5 bg-slate-100 shadow-inner">
+            <img 
+              src="${prompt.imageUrl}" 
+              alt="${prompt.title}" 
+              loading="lazy"
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              onerror="this.src='https://placehold.co/600x400/B9E8FF/20243A?text=Prompt+Preview'"
+            />
+            
+            <div class="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold ${prompt.categoryColor} backdrop-blur-md shadow-sm border">
+              ${prompt.categoryLabel}
+            </div>
+
+            ${prompt.category !== 'image' ? `
+              <div class="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/60 text-white text-[11px] font-bold flex items-center gap-1 backdrop-blur-md">
+                <i data-lucide="play" class="w-3 h-3 fill-white"></i>
+                <span>Video Prompt</span>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Title & Description -->
+          <div class="space-y-1 mb-3">
+            <h3 class="text-base sm:text-lg font-extrabold text-[#20243A] group-hover:text-[#4F86F7] transition-colors line-clamp-1">
+              ${escapeHtml(prompt.title)}
+            </h3>
+            <p class="text-xs text-[#60677A] line-clamp-2 font-medium">
+              ${escapeHtml(prompt.description)}
+            </p>
+          </div>
+
+          <!-- Scrollable Prompt Code Box -->
+          <div class="mb-4">
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+              <span>Full Prompt Syntax:</span>
+              <span class="text-purple-600 cursor-pointer hover:underline" onclick="openModal('${prompt.id}')">Expand View</span>
+            </div>
+            <div class="p-3 rounded-2xl bg-white/70 border border-white/90 text-xs font-mono-code text-slate-800 h-24 overflow-y-auto leading-relaxed shadow-inner">
+              ${escapeHtml(prompt.promptText)}
+            </div>
+          </div>
+
+          <!-- Action Buttons Row -->
+          <div class="pt-3 border-t border-white/70 flex items-center gap-2">
+            
+            <button 
+              onclick="copyPromptText('${prompt.id}')" 
+              class="flex-1 py-2.5 px-3 rounded-full jelly-btn-primary text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+            >
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span>Copy Prompt</span>
+            </button>
+
+            <button 
+              onclick="downloadPromptFile('${prompt.id}')" 
+              class="p-2.5 rounded-full bg-white/80 hover:bg-white text-slate-700 hover:text-purple-600 border border-white shadow-sm transition active:scale-95" 
+              title="Download as .txt file"
+            >
+              <i data-lucide="download" class="w-4 h-4"></i>
+            </button>
+
+            <button 
+              onclick="openModal('${prompt.id}')" 
+              class="p-2.5 rounded-full bg-white/80 hover:bg-white text-slate-700 hover:text-blue-600 border border-white shadow-sm transition active:scale-95" 
+              title="View full prompt details"
+            >
+              <i data-lucide="maximize-2" class="w-4 h-4"></i>
+            </button>
+
+          </div>
+
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    function filterByCategory(cat) {
+      currentCategory = cat;
+      playChime('bubble');
+
+      document.querySelectorAll('.category-pill').forEach(pill => {
+        pill.className = "category-pill px-4 py-2 rounded-full text-xs font-bold transition-all bg-white/70 text-slate-700 hover:bg-white";
+      });
+      const activePill = document.getElementById(`pill-${cat}`);
+      if (activePill) {
+        activePill.className = "category-pill px-4 py-2 rounded-full text-xs font-bold transition-all bg-gradient-to-r from-[#4F86F7] to-[#7655F6] text-white shadow-sm";
+      }
+
+      renderPrompts();
+    }
+
+    function handleSearch(val) {
+      searchQuery = val;
+      renderPrompts();
+    }
+
+    function handleSort(val) {
+      currentSort = val;
+      renderPrompts();
+    }
+
+    function resetFilters() {
+      currentCategory = 'all';
+      searchQuery = '';
+      document.getElementById('search-input').value = '';
+      filterByCategory('all');
+    }
+
+    /* ==========================================================
+       4. COPY & TXT DOWNLOAD
+       ========================================================== */
+    function copyPromptText(id) {
+      const item = promptsDatabase.find(p => p.id === id);
+      if (!item) return;
+
+      copyToClipboard(item.promptText, `✨ Copied prompt for: "${item.title}"`);
+      playChime('copy');
+    }
+
+    function copyToClipboard(text, successMsg = 'Copied to clipboard!') {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast(successMsg);
+      } catch (err) {
+        showToast('⚠️ Could not copy text. Please select manually.');
+      }
+    }
+
+    function copyShareLink() {
+      copyToClipboard(window.location.href, '🔗 Prompt Hub Pro link copied to clipboard!');
+      playChime('bubble');
+    }
+
+    function downloadPromptFile(id) {
+      const item = promptsDatabase.find(p => p.id === id);
+      if (!item) return;
+
+      playChime('download');
+
+      const content = `=====================================================
+PROMPT HUB PRO — OFFICIAL AI PROMPT EXPORT
+=====================================================
+Title:       ${item.title}
+Category:    ${item.categoryLabel}
+Engine:      ${item.engine || 'Universal AI'}
+Project:     pormotes (Firebase)
+-----------------------------------------------------
+
+[FULL PROMPT TEXT]
+${item.promptText}
+
+-----------------------------------------------------
+Recommended AI Engines:
+- Midjourney v6.1 (--style raw)
+- OpenAI Sora
+- Runway Gen-3 Alpha
+- FLUX.1 Schnell
+- DALL-E 3
+=====================================================`;
+
+      const safeFilename = (item.slug || item.title).toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${safeFilename}-prompt.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast(`📥 Downloaded ${safeFilename}-prompt.txt`);
+    }
+
+    /* ==========================================================
+       5. MODAL DETAIL POPUP
+       ========================================================== */
+    function openModal(id) {
+      const item = promptsDatabase.find(p => p.id === id);
+      if (!item) return;
+
+      playChime('bubble');
+      const modal = document.getElementById('prompt-modal');
+      const content = document.getElementById('modal-content');
+
+      const related = promptsDatabase
+        .filter(p => p.category === item.category && p.id !== item.id)
+        .slice(0, 2);
+
+      content.innerHTML = `
+        <div class="space-y-4 sm:space-y-5">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-3 py-1 rounded-full text-xs font-bold ${item.categoryColor} border">
+                ${item.categoryLabel}
+              </span>
+              <span class="text-xs font-semibold text-slate-400 font-mono-code">${item.engine || 'AI Engine'}</span>
+            </div>
+            <h2 class="text-xl sm:text-3xl font-black text-[#20243A]">${escapeHtml(item.title)}</h2>
+            <p class="text-xs sm:text-sm text-slate-600 mt-1">${escapeHtml(item.description)}</p>
+          </div>
+
+          <div class="w-full h-64 sm:h-96 rounded-3xl overflow-hidden bg-slate-100 shadow-md">
+            <img 
+              src="${item.imageUrl}" 
+              alt="${item.title}" 
+              class="w-full h-full object-cover"
+              onerror="this.src='https://placehold.co/800x500/B9E8FF/20243A?text=Prompt+Preview'"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Prompt Syntax & Parameters:</label>
+              <span class="text-xs font-bold text-purple-600">${item.promptText.length} Characters</span>
+            </div>
+            <div class="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-mono-code text-slate-800 max-h-48 overflow-y-auto leading-relaxed shadow-inner">
+              ${escapeHtml(item.promptText)}
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-2">
+            <button onclick="copyPromptText('${item.id}')" class="flex-1 py-3 px-4 rounded-full jelly-btn-primary font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md">
+              <i data-lucide="copy" class="w-4 h-4"></i>
+              <span>Copy Full Prompt</span>
+            </button>
+            <button onclick="downloadPromptFile('${item.id}')" class="py-3 px-5 rounded-full jelly-btn-secondary font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Download .txt</span>
+            </button>
+            <button onclick="closeModal()" class="py-3 px-5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm">
+              Close
+            </button>
+          </div>
+
+          ${related.length > 0 ? `
+            <div class="pt-5 border-t border-slate-200">
+              <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">More in this category:</h4>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                ${related.map(rel => `
+                  <div onclick="openModal('${rel.id}')" class="p-3 rounded-2xl bg-white border border-slate-200 hover:border-purple-300 flex items-center gap-3 cursor-pointer transition">
+                    <img src="${rel.imageUrl}" class="w-11 h-11 rounded-xl object-cover shrink-0" onerror="this.src='https://placehold.co/100/B9E8FF/20243A?text=AI'" />
+                    <div>
+                      <div class="text-xs font-bold text-slate-800 line-clamp-1">${escapeHtml(rel.title)}</div>
+                      <div class="text-[10px] text-purple-600 font-semibold">${rel.categoryLabel}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+        </div>
+      `;
+
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      lucide.createIcons();
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('prompt-modal');
+      modal.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    }
+
+    window.addEventListener('click', (e) => {
+      const modal = document.getElementById('prompt-modal');
+      if (e.target === modal) closeModal();
+    });
+
+    /* ==========================================================
+       6. LIVE CLOCK, DAY PROGRESS, & HYDRATION
+       ========================================================== */
+    function updateLiveClocks() {
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const hours12 = hours % 12 || 12;
+
+      const navClock = document.getElementById('nav-live-clock');
+      if (navClock) navClock.textContent = `${hours12}:${minutes} ${ampm}`;
+
+      const widgetClock = document.getElementById('widget-clock');
+      if (widgetClock) widgetClock.textContent = `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
+
+      const widgetDate = document.getElementById('widget-date');
+      if (widgetDate) {
+        widgetDate.textContent = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      }
+
+      const secondsLeftInDay = (24 * 3600) - (hours * 3600 + now.getMinutes() * 60 + now.getSeconds());
+      const hoursLeft = Math.floor(secondsLeftInDay / 3600);
+      const minsLeft = Math.floor((secondsLeftInDay % 3600) / 60);
+
+      const hoursLeftText = document.getElementById('hours-left-text');
+      if (hoursLeftText) hoursLeftText.textContent = `${hoursLeft}h ${minsLeft}m`;
+
+      const progressBar = document.getElementById('day-progress-bar');
+      if (progressBar) {
+        const percentPassed = Math.round(((86400 - secondsLeftInDay) / 86400) * 100);
+        progressBar.style.width = `${percentPassed}%`;
+      }
+    }
+
+    function updateWater(delta) {
+      playChime('bubble');
+      waterGlasses = Math.max(0, Math.min(12, waterGlasses + delta));
+      document.getElementById('water-count').textContent = waterGlasses;
+      if (waterGlasses >= 8) {
+        showToast('💧 Daily hydration goal reached!');
+      }
+    }
+
+    /* ==========================================================
+       7. TOAST NOTIFICATIONS & HELPERS
+       ========================================================== */
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = "jelly-card px-4 py-3 bg-white/95 text-xs font-bold text-[#20243A] shadow-xl border border-white flex items-center gap-2 transform translate-y-4 opacity-0 transition-all duration-300 pointer-events-auto";
+      toast.innerHTML = `
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+
+      setTimeout(() => toast.classList.remove('translate-y-4', 'opacity-0'), 20);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    function openExternal(url) {
+      playChime('bubble');
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+
+    function toggleMobileMenu() {
+      document.getElementById('mobile-menu').classList.toggle('hidden');
+    }
+
+    function escapeHtml(text) {
+      return (text || '')
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    /* App Initializer */
+    window.onload = function() {
+      initFirebase();
+      updateCounters();
+      renderPrompts();
+      updateLiveClocks();
+      setInterval(updateLiveClocks, 1000);
+      lucide.createIcons();
+    };
+  </script>
+</body>
+</html>
